@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route.js";
 import userRouter from "./routes/user.route.js";
 import transactionRouter from "./routes/transaction.route.js"
-
+import dashboardRouter from "./routes/dashboard.route.js"
 const app = express()
 
 app.use(cors({
@@ -21,7 +21,7 @@ app.use(cookieParser())
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/transactions", transactionRouter)  
-
+app.use("/api/v1/dashboard", dashboardRouter) 
 // global error handler
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500
