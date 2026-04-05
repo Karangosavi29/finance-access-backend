@@ -46,12 +46,12 @@ const createTransaction = asyncHandler(async (req, res) => {
 
 const getAllTransactions = asyncHandler(async (req, res) => {
     // get filter query params from request (type, category, startDate, endDate)
+    // get pagination params (page, limit) with defaults
     // build filter object based on provided query params
-    // fetch transactions from db with filters
-    // populate createdBy with user name and email
-    // return res
+    // fetch transactions from db with filters and pagination
+    // return res with pagination meta
 
-    const { type, category, startDate, endDate } = req.query
+    const { type, category, startDate, endDate, page = 1, limit = 10 } = req.query
 
     const filter = {}
 
@@ -73,13 +73,36 @@ const getAllTransactions = asyncHandler(async (req, res) => {
         if (endDate) filter.date.$lte = new Date(endDate)
     }
 
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+    const skip = (pageNum - 1) * limitNum
+
+    const totalCount = await Transaction.countDocuments(filter)
+    const totalPages = Math.ceil(totalCount / limitNum)
+
     const transactions = await Transaction.find(filter)
         .populate("createdBy", "name email role")
         .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitNum)
 
     return res
         .status(200)
-        .json(new ApiResponse(200, transactions, "Transactions fetched successfully"))
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    transactions,
+                    pagination: {
+                        totalCount,
+                        totalPages,
+                        currentPage: pageNum,
+                        limit: limitNum
+                    }
+                },
+                "Transactions fetched successfully"
+            )
+        )
 })
 
 const getTransactionById = asyncHandler(async (req, res) => {
